@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Depends
-from .schema import User, Fav, Brand, ScanHistory
-from sqlalchemy.orm import Session
-from .database import get_db
-from .models import User, Brand, Fav, ScanHis
+from fastapi import FastAPI
+from qrless.src import models
+from qrless.src.database import engine
+from qrless.src.router import router
 
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+app.include_router(router)
