@@ -1,5 +1,21 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Dict, Any, Optional
+
+
+class ImageData(BaseModel):
+    image_base64: str
+
+# class TokenData(BaseModel):
+#     username: Optional[str] = None
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class LoginCredentials(BaseModel):
+    username: str
+    password: str
 
 class UserBase(BaseModel):
     username: str
@@ -17,6 +33,7 @@ class User(UserBase):
 
 class BrandBase(BaseModel):
     name: str
+    menu: Dict[str, Any]
 
 class BrandCreate(BrandBase):
     pass
