@@ -49,6 +49,13 @@ class FavBase(BaseModel):
     user_id: int
     brand_id: int
 
+class FavBrandName(BaseModel):
+    brand_name: str
+
+    class Config:
+        orm_mode = True
+
+
 class FavCreate(FavBase):
     pass
 
@@ -57,6 +64,10 @@ class Fav(FavBase):
 
     class Config:
         orm_mode = True
+
+class ScanHistoryResponse(BaseModel):
+    brand_name: str
+    scan_time: datetime
 
 class ScanHistoryBase(BaseModel):
     user_id: int

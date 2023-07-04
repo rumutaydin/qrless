@@ -1,40 +1,18 @@
-# from fastapi.security import HTTPBearer
-# from fastapi import Depends, HTTPException, status
-# from jose import JWTError, jwt
-# import src.schema as schema
-#import dotenv
-
-
-# This is your JWT token secret key
-SECRET_KEY = "KJHSFDKJLGHFKJlikslSJLFGFDG6FDS5GH6SDFLku"
-
-# This is an instance of the bearer token dependency
-# oauth2_scheme = HTTPBearer()
-
-# def get_current_user(token: str = Depends(oauth2_scheme)):
-#     credentials_exception = HTTPException(
-#         status_code=status.HTTP_401_UNAUTHORIZED,
-#         detail="Could not validate credentials",
-#         headers={"WWW-Authenticate": "Bearer"},
-#     )
-#     try:
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-#         userid: str = payload.get("sub")
-#         if userid is None:
-#             raise credentials_exception
-#         return schema.User(user_id=userid)
-#     except JWTError:
-#         raise credentials_exception
-    
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt import PyJWTError
 import jwt
 from .. import crud, database
 from sqlalchemy.orm import Session
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 oauth2_scheme = HTTPBearer()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 
 async def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
     credentials_exception = HTTPException(
@@ -45,7 +23,7 @@ async def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_
     token_str = token.credentials
     print(token_str)
     try:
-        payload = jwt.decode(token_str, SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token_str, SECRET_KEY, algorithms=[ALGORITHM])
         print(payload)
         username: str = payload.get("sub")
         if username is None:

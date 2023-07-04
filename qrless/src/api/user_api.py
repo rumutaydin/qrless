@@ -5,17 +5,21 @@ from fastapi.security import HTTPBasic
 from passlib.context import CryptContext
 from typing import List
 from ..utils import token_decode as tok
+from sqlalchemy.orm.exc import NoResultFound
 import jwt
 #from jwt import PyJWTError
 import datetime
+import os
+from dotenv import load_dotenv
 
 router = APIRouter()
 
 security = HTTPBasic()
+load_dotenv()
 
-SECRET_KEY = "KJHSFDKJLGHFKJlikslSJLFGFDG6FDS5GH6SDFLku"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 3000
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -63,22 +67,45 @@ def login_for_access_token(credentials: schema.LoginCredentials, db: Session = D
     access_token = create_access_token(
         data={"sub": str(user.username)}, expires_delta=access_token_expires
     )
-    print(user.username)
-    print(access_token)
-    print(jwt.decode(access_token, key=SECRET_KEY, algorithms=[ALGORITHM]))
+    # print(user.username)
+    # print(access_token)
+    # print(jwt.decode(access_token, key=SECRET_KEY, algorithms=[ALGORITHM]))
 
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/favorites", response_model=List[schema.Fav])
+@router.get("/favorites", response_model=List[schema.FavBrandName])
 def read_user_favorites(current_user: schema.User = Depends(tok.get_current_user),
                         db: Session = Depends(database.get_db)):
     favorites = crud.get_user_favorites(db, current_user.id)
-    return favorites
+    return [{"brand_name": fav[0]} for fav in favorites]
 
 
-@router.get("/scanhistory", response_model=List[schema.ScanHistory])
+@router.get("/scanhistory", response_model=List[schema.ScanHistoryResponse])
 def read_user_scanhistory(current_user: schema.User = Depends(tok.get_current_user),
                           db: Session = Depends(database.get_db)):
     scanhistory = crud.get_user_scanhistory(db, current_user.id)
     return scanhistory
+
+@router.post("/favorites/{brand_name}")
+def add_to_favorites(brand_name: str, current_user: schema.User = Depends(tok.get_current_user),
+                     db: Session = Depends(database.get_db)):
+    try:
+        brand = crud.make_fav(db, brand_name, current_user.id)
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="Brand not found")
+    
+    print(brand)
+    
+    return {"detail": f"Brand {brand_name} added to favorites"}
+
+@router.delete("/favorites/{brand_name}")
+def remove_from_favorites(brand_name: str, current_user: schema.User = Depends(tok.get_current_user),
+                          db: Session = Depends(database.get_db)):
+    try:
+        brand = crud.unfav_the_brand(db, brand_name, current_user.id)
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="Brand not found")
+
+    print(brand)
+    return {"detail": f"Brand {brand_name} removed from favorites"}
