@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 
 class ImageData(BaseModel):
@@ -12,6 +12,24 @@ class ImageData(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class MenuItem(BaseModel):
+    name: str
+    description: Optional[str]
+    price: float
+    image_url: str
+
+class MenuCategory(BaseModel):
+    burgers: Optional[List[MenuItem]]
+    sides: Optional[List[MenuItem]]
+    drinks: Optional[List[MenuItem]]
+
+class InnerMenu(BaseModel):
+    menu: MenuCategory
+
+class Menu(BaseModel):
+    menu: InnerMenu
+
 
 class LoginCredentials(BaseModel):
     username: str
@@ -33,7 +51,7 @@ class User(UserBase):
 
 class BrandBase(BaseModel):
     name: str
-    menu: Dict[str, Any]
+    menu: InnerMenu
 
 class BrandCreate(BrandBase):
     pass

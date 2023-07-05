@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from .. import crud, schema, database
 from ..utils import token_decode as tok
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from array import array
 import os
 from PIL import Image
@@ -28,7 +30,7 @@ endpoint = os.getenv("VISION_ENDPOINT")
 computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
 
 
-@router.post("/detect-brand", response_model=schema.Brand)
+@router.post("/detect-brand")
 def detect_brand(img: schema.ImageData, db: Session = Depends(database.get_db), current_user: schema.User = Depends(tok.get_current_user)):
     image = img.image_base64
     image_bytes = base64.b64decode(image)
@@ -49,15 +51,15 @@ def detect_brand(img: schema.ImageData, db: Session = Depends(database.get_db), 
         if not brand_db:
             raise HTTPException(status_code=400, detail="Detected brand is not present in database")
         added_scan = crud.update_scanhistory(db, current_user.id, brand_db.id)
-        print("***************************")
-        print(added_scan.id)
-        print(added_scan.user_id)
-        print(added_scan.brand_id)
-        print(added_scan.scan_time)
+        # print("***************************")
+        # print(added_scan.id)
+        # print(added_scan.user_id)
+        # print(added_scan.brand_id)
+        # print(added_scan.scan_time)
 
+        menu = jsonable_encoder(brand_db.menu)
 
-
-        return brand_db
+        return JSONResponse(content=menu)
 
 
 

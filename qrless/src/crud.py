@@ -58,7 +58,10 @@ def get_user_scanhistory(db: Session, user_id: int):
     return [{"brand_name": record[1], "scan_time": record[0]} for record in result]
 
 def check_matching_brand(db: Session, brand_name: str):
-    return db.query(models.Brand).filter(models.Brand.name == brand_name).first()
+    query = db.query(models.Brand).filter(models.Brand.name == brand_name).first()
+    print("************************************************************************")
+    print(query.menu)
+    return query
 
 def update_scanhistory(db: Session, u_id: int, b_id: int):
     item = models.ScanHis(user_id = u_id, brand_id = b_id, scan_time=datetime.datetime.now())
